@@ -14,6 +14,7 @@ namespace GameManagement
 				return;
 			
 			Cursor.visible = _activeState;
+			Cursor.lockState = (_activeState) ? CursorLockMode.None : CursorLockMode.Locked;
 		}
 
 		public static void ChangeScene(int _sceneNumber)
@@ -63,16 +64,6 @@ namespace GameManagement
 			}
 		}
 
-		public static uint GetRealWorldSize(this World _world)
-		{
-			return (uint)(_world.worldSize * World.tileSize);
-		}
-
-		public static int GetLocalWorldSize(this World _world)
-		{
-			return _world.worldSize;
-		}
-
 		public static void DestroyBlock(this GameObject _block)
 		{
 			BlockManager manager = _block.GetComponent<BlockManager>();
@@ -91,6 +82,35 @@ namespace GameManagement
 		public static float blockPlaceDistance = 5f;
 		public static int heightWorldSize = 128; //128 for rays, 127 for block builds
 		public static float blockToughness = 0.4f;
+	}
+
+	public static class World
+	{	
+		public const int tileSize = 32, tileHeightScale = 20;
+		public const float tileDetailScale = 25.0f;
+
+		public static int[] seed {get; private set;} //6-místní kód
+		
+		public static int worldSize {get; private set;} // Current world size in local size
+
+		public static void SetNew(string _seed, int _worldSize)
+		{
+			seed = new int[2];
+			seed[0] = int.Parse(_seed.Substring(0,3));
+			seed[1] = int.Parse(_seed.Substring(3,3));
+
+			worldSize = _worldSize;
+		}
+
+		public static uint GetRealWorldSize()
+		{
+			return (uint)(worldSize * World.tileSize);
+		}
+
+		public static int GetLocalWorldSize()
+		{
+			return worldSize;
+		}
 	}
 
 	public static class Tiler
@@ -177,22 +197,6 @@ namespace GameManagement
 
 			transform = gameObject.transform;
 			gameObject.GetComponent<MeshRenderer>().sharedMaterial = _material;
-		}
-	}
-
-	public class World
-	{	
-		public const int tileSize = 32, tileHeightScale = 20;
-		public const float tileDetailScale = 25.0f;
-
-		public readonly string seed; //6-místní kód
-		
-		public int worldSize {get; private set;} // Current world size in local size
-
-		public World(string _seed, int _worldSize)
-		{
-			seed = _seed;
-			worldSize = _worldSize;
 		}
 	}
 }

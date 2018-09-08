@@ -5,11 +5,9 @@ using GameManagement;
 
 public class LoadingScreen : WorldBehaviour
 {
-    public static World activeWorld {get; private set;}
-
 	public static void LoadWorld(string _seed, int _worldSize)
 	{
-		activeWorld = new World(_seed,_worldSize);
+		World.SetNew(_seed,_worldSize);
         Game.ChangeScene(1);
         Game.SetCursorActiveSafe(false);
 	}
@@ -27,7 +25,7 @@ public class LoadingScreen : WorldBehaviour
         
         progressPerc.text = "0%";
 
-        worldSingleton.BuildWorld(activeWorld);
+        worldSingleton.BuildWorld();
     }
 
 	public void SpawnPlayer(Vector3 playerPosition)
@@ -55,7 +53,7 @@ public class LoadingScreen : WorldBehaviour
     protected override void OnLoadingUpdate(int loadingProgress)
     {
         
-        if(loadingProgress >= 100)
+        if(loadingProgress >= 99)
         {
             CallMessage(MessageType.WORLD_GENERATED);
             return;

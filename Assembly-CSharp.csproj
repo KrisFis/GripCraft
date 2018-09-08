@@ -9,7 +9,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{FDB3C36E-D8A0-5B35-16C1-E213D7453D68}</ProjectGuid>
+    <ProjectGuid>{86D78E67-F5CA-9E40-DFB5-E6B8A481B8BD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -66,7 +66,7 @@
      <Compile Include="Assets\Scripts\Player\PlayerMovement.cs" />
      <Compile Include="Assets\Scripts\WorldManager.cs" />
  <Reference Include="Unity.PackageManagerUI.Editor">
- <HintPath>C:/Users/Alternity/Projects/Unity/Gripcraft/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
+ <HintPath>C:/Users/Alternity/Projects/Unity/GripCraft/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
  </Reference>
  <Reference Include="UnityEngine.ARModule">
  <HintPath>C:/Unity/Editors/2018.2.6f1/Editor/Data/Managed/UnityEngine/UnityEngine.ARModule.dll</HintPath>
