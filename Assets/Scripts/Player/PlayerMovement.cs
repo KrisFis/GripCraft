@@ -8,11 +8,11 @@ using GameManagement;
 public class PlayerMovement : MonoBehaviour {
 
 	private float moveSpeed = 5.0f;
-	private float jumpHeight = 60.0f;
+	private float jumpHeight = 50.0f;
 
 	private const float viewLimit = 85.0f;
 
-	private bool Sprint, Jump, isGrounded;
+	private bool Sprint, Jump;
 
 	private Vector3 movement, rotation;
 	private float cameraRotation, currCameraRotation;
@@ -32,6 +32,7 @@ public class PlayerMovement : MonoBehaviour {
 	{
 		rb = GetComponent<Rigidbody>();
 		cam = GetComponentInChildren<Camera>();
+		distanceToGround = transform.GetComponentInChildren<BoxCollider>().bounds.extents.y;
 	}
 
 	void Update()
@@ -59,8 +60,13 @@ public class PlayerMovement : MonoBehaviour {
 			Sprint = false;
 
 		/* Calculate jump */
-		if(Input.GetButtonDown("Jump") && isGrounded)
+		if(Input.GetButtonDown("Jump") && IsGrounded())
 			Jump = true;
+	}
+
+	private bool IsGrounded()
+	{
+		return Physics.Raycast(transform.position, -Vector3.up, distanceToGround + 0.5f);
 	}
 
 	void FixedUpdate()
@@ -107,21 +113,5 @@ public class PlayerMovement : MonoBehaviour {
 		currCameraRotation = Mathf.Clamp(currCameraRotation, -viewLimit, viewLimit);
 
 		cam.transform.localEulerAngles = new Vector3(currCameraRotation,0,0);
-	}
-
-	void OnCollisionStay(Collision _collision)
-	{
-		if(_collision.gameObject.tag != "Block")
-			return;
-
-		isGrounded = true;
-	}
-
-	void OnCollisionExit(Collision _collision)
-	{
-		if(_collision.gameObject.tag != "Block")
-			return;
-
-		isGrounded = false;
 	}
 }

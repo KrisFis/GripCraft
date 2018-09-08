@@ -53,19 +53,12 @@ public class BlockManager : BlockBehaviour
 
     private void ReCreateAround()
     {
-        /*
-        RaycastHit[] hits;
-        if(ShotRayAll(this.transform.position, this.transform.up, out hits))
+        if(!ShotRay(this.transform.position, -this.transform.up))
         {
-            if(hits.Length > 1)
-                return;
-
-            CreateTerrainBlock(this.transform.position, parentTile);
+                Vector3 newPos = this.transform.position - this.transform.up;
+                CreateTerrainBlock(newPos, parentTile);
         }
-        */
 
-        CheckDown();
-        CheckDirectionRay(this.transform.up);
         CheckDirectionRay(this.transform.forward);
         CheckDirectionRay(-this.transform.forward);
         CheckDirectionRay(this.transform.right);
@@ -89,91 +82,27 @@ public class BlockManager : BlockBehaviour
 
         if(!ShotRay(this.transform.position, _direction, out hit))
         {
-            if(!ShotRayDown(this.transform.position + _direction, out hit))
+            if(ShotRay(this.transform.position + _direction, this.transform.up, out hit) && hit.transform.GetComponent<BlockManager>().IsTerrain)
             {
-                if(!ShotRayUp(this.transform.position + _direction, out hit)) //To get RAY
-                    return; //JUST IN CASE - ERROR
-
+                if(ShotRay(this.transform.position + _direction, -this.transform.up))
+                    return;
+                
                 Vector3 newPos = this.transform.position + _direction;
-                int newParent = hit.transform.GetComponent<BlockManager>().parentTile;
-
-                if(hit.distance > 0.75f)
-                {
-                    CheckUp(newPos + this.transform.up, newParent);
-                }
-
-                CreateTerrainBlock(newPos, newParent);
+                CreateTerrainBlock(newPos, hit.transform.GetComponent<BlockManager>().parentTile);
             }
-        }
-    }
-
-    private void CheckUp(Vector3 _position, int _parent)
-    {
-        int maxY = (int)(Mathf.PerlinNoise((_position.x + World.seed[0]) / World.tileDetailScale,
-				(_position.z + World.seed[1]) / World.tileDetailScale) * World.tileHeightScale);
-
-        if((maxY - _position.y) < 0)
-            return;
-
-        CreateTerrainBlock(_position, _parent);
-    }
-
-    private void CheckDown()
-    {
-        RaycastHit hit;
-
-        if(!ShotRayDown(this.transform.position, out hit))
-        {
-                Vector3 newPos = this.transform.position - this.transform.up;
-                CreateTerrainBlock(newPos, parentTile);
         }
     }
 
     private bool ShotRay(Vector3 origin, Vector3 direction, out RaycastHit hit)
 	{
-        if(Physics.Raycast(new Ray(origin,direction), out hit, 1.0f , ~LayerMask.NameToLayer("Blocks")))
-            return hit.transform.GetComponent<BlockManager>().IsTerrain;
-
-        return false;
+		return Physics.Raycast(new Ray(origin,direction), out hit, 1.0f ,~LayerMask.NameToLayer("Blocks"));
 	}
     
-    private bool ShotRayUp(Vector3 origin, out RaycastHit hit)
+    private bool ShotRay(Vector3 origin, Vector3 direction)
 	{
-		if(Physics.Raycast(new Ray(origin, this.transform.up), out hit, Settings.heightWorldSize + origin.y, ~LayerMask.NameToLayer("Blocks")))
-            return hit.transform.GetComponent<BlockManager>().IsTerrain;
-
-        return false;
-    }
-
-    private bool ShotRayDown(Vector3 origin, out RaycastHit hit)
-    {
-        if(Physics.Raycast(new Ray(origin, -this.transform.up), out hit, Settings.heightWorldSize - origin.y, ~LayerMask.NameToLayer("Blocks")))
-            return hit.transform.GetComponent<BlockManager>().IsTerrain;
-
-        return false;
-    }
-
-    private bool ShotRayAll(Vector3 origin, Vector3 direction, out RaycastHit[] hits)
-    {
-        hits = Physics.RaycastAll(new Ray(origin, direction), Settings.heightWorldSize + origin.y, ~LayerMask.NameToLayer("Blocks"));
-
-        List<RaycastHit> newHits = new List<RaycastHit>();
-
-        foreach(RaycastHit hit in hits)
-        {
-            if(hit.transform.GetComponent<BlockManager>().IsTerrain)
-            {
-                newHits.Add(hit);
-            }
-        }
-
-        hits = newHits.ToArray();
-
-        if(hits.Length == 0)
-            return false;
-
-        return true;
-    }
+        RaycastHit hit;
+		return Physics.Raycast(new Ray(origin,direction), out hit, Settings.heightWorldSize - Mathf.Abs(origin.y) ,~LayerMask.NameToLayer("Blocks"));
+	}
 
     private GameObject CreateTerrainBlock(Vector3 _position, int _parentIndex)
     {

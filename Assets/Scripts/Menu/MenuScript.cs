@@ -10,6 +10,8 @@ public class MenuScript : MonoBehaviour {
 	public Slider sliderValue;
 	public InputField inputValue;
 
+	private World worldToGenerate;
+
 	private string seed = string.Empty;
 	private int size = 0;
 

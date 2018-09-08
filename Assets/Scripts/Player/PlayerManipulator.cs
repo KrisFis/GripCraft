@@ -18,18 +18,17 @@ public class PlayerManipulator : WorldBehaviour
 	public Material close, normal;
 	private bool isClose = true;
 
-	private const float minDistance = 1.25f;
+	private const float minDistance = 2f;
 
 	private BlockManager block;
 	private PlayerHUD hud;
-
-	private int equipped;
 
 	void Awake()
 	{
 		previewObj = Instantiate(Resources.Load<GameObject>("Blocks/PreviewPrefab"), lastPos, Quaternion.identity);
 		previewObj.GetComponent<MeshRenderer>().material = normal;
 		previewObj.SetActiveSafe(false);
+
 
 		RegisterCalls();
 	}
@@ -40,8 +39,7 @@ public class PlayerManipulator : WorldBehaviour
 
 		hud = GameObject.Find("HUD").GetComponent<PlayerHUD>();
 
-		equipped = 1;
-		EquipBlock();
+		EquipBlock(BlockType.GRASS);
 	}
 
     void Update()
@@ -50,8 +48,7 @@ public class PlayerManipulator : WorldBehaviour
 
         DestroyBlock();  
 
-		ChangeEquipNumbers();
-		ChangeEquipWheel();
+		ChangeEquip();
 
 		ShowPreview();
     }
@@ -104,51 +101,27 @@ public class PlayerManipulator : WorldBehaviour
 		}
 	}
 
-	private void ChangeEquipWheel()
+	private void ChangeEquip()
 	{
-		float wheel = Input.GetAxis("Mouse ScrollWheel");
-
-		if(wheel == 0f)
+		if(uiItems.parent == null)
 			return;
 
-		if(wheel < 0f)
-		{
-			if(++equipped > 4)
-			{
-				equipped = 1;
-			}
-		}
-		else
-		{
-			if(--equipped < 1)
-			{
-				equipped = 4;
-			}
-		}
-
-		EquipBlock();
-	}
-
-	private void ChangeEquipNumbers()
-	{
 		if(Input.GetKeyDown(KeyCode.Alpha1))
 		{
-			equipped = 1;
+			EquipBlock(BlockType.GRASS);
 		}
 		else if(Input.GetKeyDown(KeyCode.Alpha2))
 		{
-			equipped = 2;
+			EquipBlock(BlockType.DIRT);
 		}
 		else if(Input.GetKeyDown(KeyCode.Alpha3))
 		{
-			equipped = 3;
+			EquipBlock(BlockType.SAND);
 		}
 		else if(Input.GetKeyDown(KeyCode.Alpha4))
 		{
-			equipped = 4;
+			EquipBlock(BlockType.ROCK);
 		}
-
-		EquipBlock();
 	}
 
 	private void ChangeImage(Image _image)
@@ -161,32 +134,27 @@ public class PlayerManipulator : WorldBehaviour
 		currentImage = _image;
 	}
 
-	private void EquipBlock()
+	private void EquipBlock(BlockType _type)
 	{
-		if(uiItems.parent == null)
-			return;
-		
-		switch(equipped)
+		switch(_type)
 		{
-			case 1:
-				equipType = BlockType.GRASS;
+			case BlockType.GRASS:
 				ChangeImage(uiItems.GetChild(0).GetChild(0).GetComponent<Image>());
 				break;
-			case 2:
-				equipType = BlockType.DIRT;
+			case BlockType.DIRT:
 				ChangeImage(uiItems.GetChild(1).GetChild(0).GetComponent<Image>());
 				break;
-			case 3:
-				equipType = BlockType.SAND;
+			case BlockType.SAND:
 				ChangeImage(uiItems.GetChild(2).GetChild(0).GetComponent<Image>());
 				break;
-			case 4:
-				equipType = BlockType.ROCK;
+			case BlockType.ROCK:
 				ChangeImage(uiItems.GetChild(3).GetChild(0).GetComponent<Image>());
 				break;
 			default:
 				return;
 		}
+		
+		equipType = _type;
 
 	}
 
@@ -216,8 +184,6 @@ public class PlayerManipulator : WorldBehaviour
 
 			if(hitTile == null)
 				return;
-
-			previewObj.SetActiveSafe(false);
 
 			hud.StartLoading(hit.transform.GetComponent<BlockManager>().blockToughness * Settings.blockToughness);
 

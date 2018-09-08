@@ -9,6 +9,8 @@ public class WorldManager : WorldBehaviour {
 	private bool isGeneratedLocally = false;
 	private bool isGenerating = false;
 
+	public static World mainWorld {get; private set;}
+
 	private float loadingPerc = 0, loadingAdd = 0;
 
 	void Awake()
@@ -93,13 +95,14 @@ public class WorldManager : WorldBehaviour {
 
 	private IEnumerator GenerateTile(Tile tile, Vector3 position)
 	{
+		int[] localSeed = {int.Parse(mainWorld.seed.Substring(0,3)), int.Parse(mainWorld.seed.Substring(3,3))};
 
 		for(int z=0; z <= World.tileSize; z++)
 		{
 			for(int x=0; x<= World.tileSize; x++)
 			{
-				int y = (int)(Mathf.PerlinNoise((position.x + x + World.seed[0]) / World.tileDetailScale,
-				(position.z + z + World.seed[1]) / World.tileDetailScale) * World.tileHeightScale);
+				int y = (int)(Mathf.PerlinNoise((position.x + x + localSeed[0]) / World.tileDetailScale,
+				(position.z + z + localSeed[1]) / World.tileDetailScale) * World.tileHeightScale);
 
 				if(y > 15)
 				{
@@ -126,16 +129,18 @@ public class WorldManager : WorldBehaviour {
 		isGeneratedLocally = true;
 	}
 
-	public void BuildWorld()
+	public void BuildWorld(World _worldObj)
 	{
-		if(World.GetLocalWorldSize() % 2 != 0)
+		if(_worldObj.GetLocalWorldSize() % 2 != 0)
 		{
 			Debug.LogError("LocalWorldSize is even!!");
 			Game.QuitGame();
 			return;
 		}
 
-		int size = World.GetLocalWorldSize();
+		mainWorld = _worldObj;
+
+		int size = mainWorld.GetLocalWorldSize();
 
 		//First few tiles, others may spawn later
 		List<Vector3> posList = new List<Vector3>();
