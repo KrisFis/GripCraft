@@ -5,7 +5,7 @@
 **Vlastnosti vývoje:**
   - vyvíjena v UNITY engine
   - psaná v UnityScript C#
-  - optimalizovaný generovaný terén_
+  - optimalizovaný generovaný terén
 
 **Vlastnosti hry:**
   - Omezený frame rate na 60 fps (Problémy ve vstupu uživatele s HighEnd pc, kdy fps > 1500)
