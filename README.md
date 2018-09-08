@@ -3,26 +3,26 @@
 **Jednoduchá sandboxová "like-minecraft" hra.**
 
 **Vlastnosti vývoje:**
- _- vyvíjena v UNITY engine
+  - vyvíjena v UNITY engine
   - psaná v UnityScript C#
   - optimalizovaný generovaný terén_
 
 **Vlastnosti hry:**
- _- Omezený frame rate na 60 fps (Problémy ve vstupu uživatele s HighEnd pc, kdy fps > 1500)
+  - Omezený frame rate na 60 fps (Problémy ve vstupu uživatele s HighEnd pc, kdy fps > 1500)
   - Možnost si vybrat kolik kostek bude předgenerováno, pro nižší trhání ve hře
-  - Optimalizovaný svět pro velké množství bloků s nízkou ztrátou fps (Kombinování meshů, pro snížení počtu CPU <-> GPU volání)_
+  - Optimalizovaný svět pro velké množství bloků s nízkou ztrátou fps (Kombinování meshů, pro snížení počtu CPU <-> GPU volání)
 
 **Vlastnosti světa:**
- _- 4 druhy kostek (Tráva, Hlína, Písek, Kámen) s rozdílnými tvrdostmi
+  - 4 druhy kostek (Tráva, Hlína, Písek, Kámen) s rozdílnými tvrdostmi
   - Přírodně náhodný terén
-  - Chování a generování světa v reálném čase_
+  - Chování a generování světa v reálném čase
 
 **Vlastnosti hráče:**
- _- Vejde se do díry o výšce 2 bloky a sám je široký méně než jeden block_
+  - Vejde se do díry o výšce 2 bloky a sám je široký méně než jeden block
 
 **Ovládání hráče:**
- _- Chůze (W/S/A/D nebo ŠIPKY NAHORU/DOLU/DOLEVA/DOPRAVA)
+  - Chůze (W/S/A/D nebo ŠIPKY NAHORU/DOLU/DOLEVA/DOPRAVA)
   - Běh (Chůze + LEVÝ SHIFT)
   - Stavění bloků (LEVÉ TLAČÍTKO MYŠI)
   - Ničení bloků (PRAVÉ TLAČÍTKO MYŠI)
-  - Výběr bloků (1/2/3/4 nebo KOLEČKO MYŠI NAHORU/DOLU)_
+  - Výběr bloků (1/2/3/4 nebo KOLEČKO MYŠI NAHORU/DOLU)
