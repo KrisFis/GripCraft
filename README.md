@@ -11,7 +11,6 @@
 
 **Vlastnosti hry:**
   - Omezený frame rate na 60 fps (Problémy ve vstupu uživatele s HighEnd pc, kdy fps > 1500)
-  - Možnost si vybrat kolik kostek bude předgenerováno, pro nižší trhání ve hře
   - Optimalizovaný svět pro velké množství bloků s nízkou ztrátou fps (Kombinování meshů, pro snížení počtu CPU <-> GPU volání)
 
 **Vlastnosti světa:**
