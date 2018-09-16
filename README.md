@@ -1,6 +1,7 @@
 # GripCraft
 
 **Jednoduchá sandboxová "like-minecraft" hra.**
+_Pro více informací o verzích_ -> **Changes.md**
 
 **Vlastnosti vývoje:**
   - vyvíjena v UNITY engine
