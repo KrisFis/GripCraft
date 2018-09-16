@@ -2,11 +2,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 
-using GameManagement;
+using GripEngine;
+using GripEngine.GameManagement;
 
 public class PlayerManipulator : WorldBehaviour
 {
-    private Tile hitTile;
+    private Transform hitTile;
 	private Transform uiItems;
 
 	private Image currentImage;
@@ -25,19 +26,22 @@ public class PlayerManipulator : WorldBehaviour
 
 	private int equipped;
 
+	public static GameObject previewPrefab;
+
 	void Awake()
 	{
-		previewObj = Instantiate(Resources.Load<GameObject>("Blocks/PreviewPrefab"), lastPos, Quaternion.identity);
-		previewObj.GetComponent<MeshRenderer>().material = normal;
-		previewObj.SetActiveSafe(false);
-
-		RegisterCalls();
+		previewPrefab = Resources.Load<GameObject>("Blocks/PreviewPrefab");
 	}
 
 	void Start()
 	{
-		uiItems = GameObject.Find("Items").transform;
+		RegisterCalls();
 
+		previewObj = Instantiate(previewPrefab, lastPos, Quaternion.identity);
+		previewObj.GetComponent<MeshRenderer>().material = normal;
+		previewObj.SetActiveSafe(false);
+
+		uiItems = GameObject.Find("Items").transform;
 		hud = GameObject.Find("HUD").GetComponent<PlayerHUD>();
 
 		equipped = 1;
@@ -100,7 +104,7 @@ public class PlayerManipulator : WorldBehaviour
 		{
 			lastPos = Vector3.zero;
 			isClose = true;
-			previewObj.SetActiveSafe(false);
+			previewObj.SetActive(false);
 		}
 	}
 
@@ -147,6 +151,8 @@ public class PlayerManipulator : WorldBehaviour
 		{
 			equipped = 4;
 		}
+		else
+			return;
 
 		EquipBlock();
 	}
@@ -212,14 +218,14 @@ public class PlayerManipulator : WorldBehaviour
 
 		if(ShotRay(out hit))
 		{
-			hitTile = hit.transform.parent.position.GetTile();
+			hitTile = hit.transform.parent;
 
 			if(hitTile == null)
 				return;
 
 			previewObj.SetActiveSafe(false);
 
-			hud.StartLoading(hit.transform.GetComponent<BlockManager>().blockToughness * Settings.blockToughness);
+			hud.StartLoading(hit.transform.GetComponent<BlockManager>().toughness * Settings.blockToughness);
 
 			block = hit.transform.GetComponent<BlockManager>();
 		}
@@ -234,7 +240,7 @@ public class PlayerManipulator : WorldBehaviour
 			
 		if(ShotRay(out hit))
 		{
-			hitTile = hit.transform.parent.position.GetTile();
+			hitTile = hit.transform.parent;
 
 			if(hitTile == null)
 				return;
@@ -248,9 +254,11 @@ public class PlayerManipulator : WorldBehaviour
 			if(blockPos.y >= (Settings.heightWorldSize-1)) //Maximal world height reached
 				return;
 
-			CreateBlock(equipType, blockPos, hitTile.gameObject, false);
+			CreateBlock(equipType, blockPos, hitTile.gameObject);
 
 			CombineBlocks(hitTile.gameObject);
+
+			Data.AddBlock(blockPos, equipType, hitTile.position);
 		}
     }
 

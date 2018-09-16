@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-using GameManagement;
+using GripEngine.GameManagement;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour {
@@ -19,19 +19,15 @@ public class PlayerMovement : MonoBehaviour {
 	private float distanceToGround;
 	
 	private Rigidbody rb;
-	private Camera cam;
+	public Camera cam;
 
-	void Awake()
+	void Start()
 	{
 		movement = rotation = Vector3.zero;
 		cameraRotation = currCameraRotation = 0.0f;
 		Sprint = Jump = false;
-	}
 
-	void Start()
-	{
 		rb = GetComponent<Rigidbody>();
-		cam = GetComponentInChildren<Camera>();
 	}
 
 	void Update()

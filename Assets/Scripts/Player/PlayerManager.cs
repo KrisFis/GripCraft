@@ -3,19 +3,24 @@ using UnityEngine;
 
 [RequireComponent(typeof(PlayerMovement))]
 public class PlayerManager : WorldBehaviour {
-	
+
+	private Vector3 lastPos;
+
 	void Start()
 	{
-		StartCoroutine(CoroutineUpdate());
+		lastPos = transform.position;
+		InvokeRepeating("CheckTiles", 1f, 0.1f);
 	}
 
-	private IEnumerator CoroutineUpdate()
+	private void CheckTiles()
 	{
-		while(this.enabled)
-		{
-			yield return new WaitForSeconds(1f);
-			worldSingleton.RegenerateTiles();
-		}
+		if(lastPos == transform.position)
+			return;
+		
+		worldSingleton.RemoveTiles();
+		worldSingleton.BuildTiles();
+
+		lastPos = transform.position;
 	}
 
 	

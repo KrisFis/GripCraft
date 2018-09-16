@@ -1,22 +1,78 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-using GameManagement;
+using GripEngine;
+using GripEngine.GameManagement;
 
 public class MenuScript : MonoBehaviour {
 
-	public Text sliderTextValue, infoText;
-
-	public Slider sliderValue;
-	public InputField inputValue;
+	public InputField seedInput, nameInput;
+	public GameObject savesObj;
+	public Text errorText;
 
 	private string seed = string.Empty;
-	private int size = 0;
+	private string worldName = string.Empty;
+
+	private static GameObject savePrefab;
+	private int numberOfSaves;
+
+	void Awake()
+	{
+		savePrefab = Resources.Load<GameObject>("UI/SavePrefab");
+	}
 
 	void Start()
 	{
-		OnSliderValueChanged();
-		Game.SetCursorActiveSafe(true);
+		Core.SetCursorActiveSafe(true);
+		Data.ReStart();
+
+		PrepareLoadButtons();
+	}
+
+	private void ShowError(string _text, float _time)
+	{
+		errorText.text = _text;
+		errorText.gameObject.SetActiveSafe(true);
+
+		Invoke("HideError", _time);
+	}
+	
+	private void HideError()
+	{
+		errorText.gameObject.SetActiveSafe(false);
+	}
+
+	private void PrepareLoadButtons()
+	{
+		foreach(GameObject obj in GameObject.FindGameObjectsWithTag("Save"))
+		{
+			Destroy(obj);
+		}
+
+		string[] worldNames;
+		if(!Game.GetSavesDirectoryNames(out worldNames))
+			return;
+
+		numberOfSaves = worldNames.Length;
+
+		for(int i = 0; i < numberOfSaves; i++)
+		{
+			string wName = worldNames[i];
+			GameObject saveObj = Instantiate(savePrefab, new Vector3((i * 202.5f) - 405f , 0 , 0 ) , Quaternion.identity);
+			saveObj.transform.SetParent(savesObj.transform, false);
+			saveObj.name = wName;
+
+			saveObj.GetComponent<Button>().onClick.AddListener(delegate {OnClickLoad(wName);});
+			saveObj.transform.GetChild(0).GetComponent<Text>().text = worldNames[i];
+
+			saveObj.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(delegate {OnClickDelete(wName);});
+		}
+	}
+
+	public void OnClickDelete(string _worldName)
+	{
+		Game.DeleteGame(_worldName);
+		PrepareLoadButtons();
 	}
 
 	public void OnClickQuit()
@@ -24,63 +80,61 @@ public class MenuScript : MonoBehaviour {
 		Game.QuitGame();
 	}
 
-	public void OnClickRandom()
+	public void OnClickLoad(string _worldName)
 	{
-		SetRandomSeed(0);
-		size = Random.Range(6, 13);
+		int errorMsg; // For diag
+		if(!Game.LoadGame(_worldName, out errorMsg))
+			return;
 
-		if(size % 2 != 0)
-			size++;
-
-		SetInfoPanel();
+		Game.ChangeScene(1);
+		Core.SetCursorActiveSafe(false);
 	}
 
-	public void OnClickOwn()
+	public void OnClickCreate()
 	{
-		OnInputChanged();
-
-		size = (int)sliderValue.value;
-		SetInfoPanel();
-	}
-
-	public void OnSliderValueChanged()
-	{
-		int _value = (int)sliderValue.value;
-
-		if(_value % 2 != 0)
+		if(numberOfSaves >= 5)
 		{
-			sliderValue.value = ++_value;
+			ShowError("<b>Byl dosažen limit uložených světů.</b>", 5f);
+		}
+
+		if(worldName == "" || worldName == string.Empty)
+		{
+			ShowError("<b>Zadejte název světa!</b>", 3f);
 			return;
 		}
 
-		sliderTextValue.text = "<b>" + (Mathf.Pow((_value+1),2) * World.tileSize) + " <color=green>B</color></b>";
-	}
-
-	public void OnInputChanged()
-	{
-		seed = inputValue.text;
-
-		if(inputValue.text.Length != 6)
+		foreach(GameObject save in GameObject.FindGameObjectsWithTag("Save"))
 		{
-			SetRandomSeed(inputValue.text.Length);
-
-			inputValue.text = seed;
-
-			return;	
+			if(save.name == worldName)
+			{
+				ShowError("<b>Zadejte platný název světa!</b>", 3f);
+				return;
+			}
 		}
+
+		OnSeedChanged();
+
+		Data.worldName = worldName;
+		Data.worldSeed = seed;
+		
+        Game.ChangeScene(1);
+        Core.SetCursorActiveSafe(false);
 	}
 
-	public void OnClickCancel()
+	public void OnNameChanged()
 	{
-		seed = string.Empty;
-		size = 0;
-
-		inputValue.text = seed;
+		worldName = nameInput.text;
 	}
 
-	public void OnClickContinue()
+	public void OnSeedChanged()
 	{
-		LoadingScreen.LoadWorld(seed, size);
+		seed = seedInput.text;
+
+		if(seedInput.text.Length != 6)
+		{
+			SetRandomSeed(seedInput.text.Length);
+			seedInput.text = seed;
+		}
 	}
 
 	private void SetRandomSeed(int _startI)
@@ -90,11 +144,6 @@ public class MenuScript : MonoBehaviour {
 			seed += "" + Random.Range(0,10);
 		}
 
-		inputValue.text = seed;
-	}
-
-	private void SetInfoPanel()
-	{
-		infoText.text = "Seed světa: <b><color=green>" + seed + "</color></b>\nMnožství předrengerovaných bloků: <b><color=red>" + Mathf.Pow((size+1),2) * World.tileSize + "</color></b>\n\nChcete pokračovat?";
+		seedInput.text = seed;
 	}
 }

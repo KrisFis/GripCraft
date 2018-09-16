@@ -1,11 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-using GameManagement;
+using GripEngine;
+using GripEngine.GameManagement;
 
 public class PlayerHUD : WorldBehaviour
 {
-
     public GameObject uiMenu, uiInventory;
     public RectTransform uiLoad;
 
@@ -50,7 +50,7 @@ public class PlayerHUD : WorldBehaviour
         uiLoad.parent.gameObject.SetActiveSafe(false);
         
         if(!_isInterrupted)
-            CallMessage("LOAD_COMPLETED");
+            CallMessage(MessageType.LOAD_COMPLETE);
     }
 
     private void AddProgress()
@@ -74,7 +74,7 @@ public class PlayerHUD : WorldBehaviour
     {
         bool choose = (uiMenu.activeSelf) ? false : true;
 
-        Game.SetCursorActiveSafe(choose);
+        Core.SetCursorActiveSafe(choose);
 
         uiMenu.SetActiveSafe(choose);
         uiInventory.SetActiveSafe(!choose);
@@ -95,8 +95,8 @@ public class PlayerHUD : WorldBehaviour
 
     public void OnClickMainMenu()
     {
+        Game.SaveGame(Data.worldName);
         Game.ChangeScene(0);
-        Game.SetCursorActiveSafe(true);
     }
 
     protected override void OnWorldGenerated()

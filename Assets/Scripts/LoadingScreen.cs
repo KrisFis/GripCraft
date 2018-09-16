@@ -1,48 +1,51 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-using GameManagement;
+using GripEngine.GameManagement;
+using GripEngine;
 
 public class LoadingScreen : WorldBehaviour
 {
-	public static void LoadWorld(string _seed, int _worldSize)
-	{
-		World.SetNew(_seed,_worldSize);
-        Game.ChangeScene(1);
-        Game.SetCursorActiveSafe(false);
-	}
-
     public GameObject uiHUD, uiScreen;
     public RectTransform uiBar;
     public Text progressPerc;
     public PlayerHUD uiHud;
-
+    
     void Start()
     {
-        RegisterCalls();
-
         uiHud.Initiate();
         
         progressPerc.text = "0%";
 
-        worldSingleton.BuildWorld();
+        RegisterCalls();
+
+        Core.SetVSyncActiveSafe(false);
+
+        worldSingleton.BuildGame();
     }
 
-	public void SpawnPlayer(Vector3 playerPosition)
+	public void SpawnPlayer()
 	{
-		//Spawn Main Tile
-        int size = 2;
-
-        for(int x = -size; x <= size; x++)
-		{
-			for(int z = -size; z <= size; z++)
-			{
-				Tiler.GetTile(new Vector3(x * World.tileSize, 0, z * World.tileSize)).gameObject.SetActiveSafe(true);
-			}
-		}
+        if(Data.playerPos == Vector3.zero)
+        {
+            RaycastHit hit;
+            if(Physics.Raycast(Vector3.zero, -transform.up, out hit, Mathf.Infinity, ~LayerMask.NameToLayer("Blocks")))
+            {
+                Data.playerPos = hit.transform.position + (transform.up * 2);
+            }
+            else if(Physics.Raycast(Vector3.zero, transform.up, out hit, Mathf.Infinity, ~LayerMask.NameToLayer("Blocks")))
+            {
+                Data.playerPos = hit.transform.position + (transform.up * 4);
+            }
+            else
+            {
+                Debug.LogError("WORLD NOT GENERATED!!");
+                return;
+            }
+        }
 
 		GameObject player = Resources.Load<GameObject>("Player/Prefab");
-		player = Instantiate(player, playerPosition, Quaternion.identity);
+		player = Instantiate(player, Data.playerPos + transform.up, Quaternion.identity);
 		player.name = "Player";
 
 		//!IMPORTANT
@@ -53,22 +56,24 @@ public class LoadingScreen : WorldBehaviour
     protected override void OnLoadingUpdate(int loadingProgress)
     {
         
-        if(loadingProgress >= 99)
+        if(loadingProgress >= 100)
         {
-            CallMessage(MessageType.WORLD_GENERATED);
+            if(playerSingleton == null)
+                CallMessage(MessageType.WORLD_GENERATED);
             return;
         }
 
         uiBar.localScale = new Vector3(loadingProgress/100.0f, uiBar.localScale.y, uiBar.localScale.z);
         progressPerc.text = loadingProgress + "%";
-
-
     }
 
     protected override void OnWorldGenerated()
     {
-        SpawnPlayer(new Vector3(16,World.tileHeightScale + 5,0)); // y + 5 = proti bugum, x = 16 -> kvůli pivotu, do centra 32/2
+        SpawnPlayer(); // y + 5 = proti bugum, x = 16 -> kvůli pivotu, do centra 32/2
         
+        Game.SaveGame(Data.worldName);
+        Core.SetVSyncActiveSafe(true);
+
         Destroy(uiScreen.gameObject);
 
         Destroy(this.gameObject);

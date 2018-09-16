@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using GripEngine;
+using Game = GripEngine.GameManagement.Game;
+
 public class BlockBehaviour : MonoBehaviour {
 
-	public enum BlockType {GRASS, DIRT, SAND, ROCK}
-
-	protected GameObject CreateBlock(BlockType _type, Vector3 _position, GameObject _parent, bool _isTerrain = true)
+	protected GameObject CreateBlock(BlockType _type, Vector3 _position, GameObject _parent, bool _isTrigger = false)
 	{
         GameObject block = Instantiate(Resources.Load<GameObject>("Blocks/BlockPrefab"), _position, Quaternion.identity);
+		block.GetComponent<BoxCollider>().isTrigger = _isTrigger;
 
 		int _tough = 0;
 
@@ -45,11 +47,20 @@ public class BlockBehaviour : MonoBehaviour {
 				return null;
 		}
 
-		block.GetComponent<BlockManager>().SetBlock(_tough, _type, _isTerrain, _parent);
-		SetBlockTexture(block, xy[0], xy[1]);
 		block.transform.SetParent(_parent.transform);
 
+		block.GetComponent<BlockManager>().Init(_tough, _type);
+		SetBlockTexture(block, xy[0], xy[1]);
+
 		return block;
+	}
+
+	protected void CreateTile(Transform _parent, out GameObject _tile, Vector3 _position)
+	{
+		_tile = Instantiate(Resources.Load<GameObject>("Blocks/TilePrefab"));
+		_tile.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("Blocks/Textures");
+		_tile.transform.SetParent(_parent);
+		_tile.name = "Tile: " + _position.x + "_" + _position.y + "_" + _position.z;
 	}
 
 	protected void CombineBlocks(GameObject _parentTile)
@@ -68,34 +79,28 @@ public class BlockBehaviour : MonoBehaviour {
 		_parentTile.SetActive(false);
 
 		MeshFilter[] meshFilters = _parentTile.GetComponentsInChildren<MeshFilter>();
-		CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+		List<CombineInstance> combineList = new List<CombineInstance>();
 
 		MeshFilter filter = _parentTile.GetComponent<MeshFilter>();
 		filter.mesh = new Mesh();
 
-		int i = 0;
-		while(i < meshFilters.Length)
+		for(int i = 1; i < meshFilters.Length; i++) // i = 1 -> skip parentMesh
 		{
-			combine[i].mesh = meshFilters[i].sharedMesh;
-			combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
-			i++;
+			if(!meshFilters[i].GetComponent<BoxCollider>().isTrigger)
+			{
+				CombineInstance combine = new CombineInstance();
+				combine.mesh = meshFilters[i].sharedMesh;
+				combine.transform = meshFilters[i].transform.localToWorldMatrix;
+				combineList.Add(combine);
+			}
 		}
 
 		filter.mesh = new Mesh();
-		filter.mesh.CombineMeshes(combine);
+		filter.mesh.CombineMeshes(combineList.ToArray());
 		filter.mesh.RecalculateBounds();
 		filter.mesh.RecalculateNormals();
 
 		_parentTile.transform.position = oldPos;
-
-		i = 0;
-		while(i < meshFilters.Length)
-		{
-			if(meshFilters[i] != filter)
-				meshFilters[i].GetComponent<BoxCollider>().enabled = true;
-			
-			i++;
-		}
 
 		_parentTile.SetActive(true);
 	}

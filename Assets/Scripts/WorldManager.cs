@@ -2,188 +2,96 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-using GameManagement;
+using GripEngine.GameManagement;
 
 public class WorldManager : WorldBehaviour {
 
-	private bool isGeneratedLocally = false;
-	private bool isGenerating = false;
-
-	private float loadingPerc = 0, loadingAdd = 0;
-
-	void Awake()
-	{
-		// !IMPORTANT
-		worldSingleton = this;
-		// !IMPORTANT
-
-		//Initialize Managers
-		Tiler.Initialize();
-		
-		RegisterCalls();
-	}
-
-	private IEnumerator BuildTilesRecursively(Vector3[] _position)
-	{
-		isGeneratedLocally = false;
-
-		Tile GeneratedTile;
-
-		GeneratedTile = Tiler.Add();
-
-		StartCoroutine(GenerateTile(GeneratedTile, _position[_position.Length-1] * World.tileSize));
-
-		while(!isGeneratedLocally)
-		{
-			yield return null;
-		}
-
-		GeneratedTile.gameObject.SetActiveSafe(false);
-
-		Vector3[] newPos = new Vector3[_position.Length-1];
-
-		for(int i = 0; i < newPos.Length; i++)
-		{
-			newPos[i] = _position[i];
-		}
-
-		if(loadingAdd != 0)
-		{
-			loadingPerc += loadingAdd;
-			CallMessage(MessageType.LOADING_UPDATE, (int)loadingPerc + "");
-		}
-
-		if(newPos.Length > 0)
-			yield return BuildTilesRecursively(newPos);
-		else if(isGenerating)
-		{
-			isGenerating = false;
-		}
-	}
-
-	private void GenerateTilesAroundTile(Tile _tile)
-	{
-		List<Vector3> tilesToGenerate = new List<Vector3>();
-		int[] tileTempPos = {(int)_tile.transform.position.x, (int)_tile.transform.position.z};
-
-		for(int i = 1; i <= 2; i++)
-		{
-			if(Tiler.GetTile(new Vector3(tileTempPos[0] + (32 * Mathf.Pow(-1,i)), 0, tileTempPos[1])) == null)
-			{
-				tilesToGenerate.Add(new Vector3(tileTempPos[0] / 32f + Mathf.Pow(-1,i) , 0, tileTempPos[1] / 32f));
-			}
-		}
-
-		for(int i = 1; i <= 2; i++)
-		{
-			if(Tiler.GetTile(new Vector3(tileTempPos[0], 0, tileTempPos[1] + (32 * Mathf.Pow(-1,i)))) == null)
-			{
-					tilesToGenerate.Add(new Vector3(tileTempPos[0] / 32f, 0, tileTempPos[1] / 32f + Mathf.Pow(-1,i)));
-			}
-		}
-
-		if(tilesToGenerate.Count > 0)
-		{
-			isGenerating = true;
-			StartCoroutine(BuildTilesRecursively(tilesToGenerate.ToArray()));
-		}
-
-				
-	}
-
-	private IEnumerator GenerateTile(Tile tile, Vector3 position)
-	{
-
-		for(int z=0; z <= World.tileSize; z++)
-		{
-			for(int x=0; x<= World.tileSize; x++)
-			{
-				int y = (int)(Mathf.PerlinNoise((position.x + x + World.seed[0]) / World.tileDetailScale,
-				(position.z + z + World.seed[1]) / World.tileDetailScale) * World.tileHeightScale);
-
-				if(y > 15)
-				{
-					CreateBlock(BlockType.GRASS, new Vector3(x,y,z), tile.gameObject);
-				}
-				else if(y > 10)
-				{
-					CreateBlock(BlockType.DIRT, new Vector3(x,y,z), tile.gameObject);
-				}
-				else if(y > 5)
-				{
-					CreateBlock(BlockType.SAND, new Vector3(x,y,z), tile.gameObject);
-				}
-				else
-				{
-					CreateBlock(BlockType.ROCK, new Vector3(x,y,z), tile.gameObject);
-				}
-			}
-			yield return null;
-		}
-
-		CombineBlocks(tile.gameObject);
-		tile.transform.position = position;
-		isGeneratedLocally = true;
-	}
-
-	public void BuildWorld()
-	{
-		if(World.GetLocalWorldSize() % 2 != 0)
-		{
-			Debug.LogError("LocalWorldSize is even!!");
-			Game.QuitGame();
-			return;
-		}
-
-		int size = World.GetLocalWorldSize();
-
-		//First few tiles, others may spawn later
-		List<Vector3> posList = new List<Vector3>();
-
-		for(int x = -(size/2); x <= (size/2); x++)
-		{
-			for(int z = -(size/2); z <= (size/2); z++)
-			{
-				posList.Add(new Vector3(x,0,z));
-			}
-		}
-
-		loadingPerc = 0;
-		loadingAdd = (100.0f / posList.Count);
-		
-		StartCoroutine(BuildTilesRecursively(posList.ToArray()));
-
-	}
-
-	protected override void OnWorldGenerated()
-	{
-		loadingAdd = 0;
-		loadingPerc = 0;
-	}
+	private WorldBuilder builder;
 	
-	//Povolená vzdálenost od tile
-	private const int maxDistance = 128;
-
-	/* FUNCTION FOR REACTIVATING TILES (ODGENEROVÁNÍ A PŘIGENEROVÁNÍ) */
-	public void RegenerateTiles()
+	void Start()
 	{
-		foreach (Tile tile in Tiler.AllTilesToArray())
-		{
-			Vector3 tilePosition = tile.transform.position + (Vector3.one / 2.0f);
- 
-			float xDistance = Mathf.Abs(tilePosition.x - playerSingleton.transform.position.x);
-			float zDistance = Mathf.Abs(tilePosition.z - playerSingleton.transform.position.z);
- 
-			if (xDistance + zDistance > maxDistance) {
-				tile.gameObject.SetActiveSafe(false);
-			} else {
-				tile.gameObject.SetActiveSafe(true);
+		InvokeStartGame();
 
-				if(!isGenerating)
-				{
-					GenerateTilesAroundTile(tile);
-				}
+		worldSingleton = this;
+
+		builder = this.GetComponent<WorldBuilder>();
+	}
+
+	void OnApplicationQuit()
+	{
+		Game.SaveGame(Data.worldName);
+	}
+
+	private void InvokeStartGame()
+	{
+		WorldBehaviour.StartGame();
+	}
+
+	public void BuildGame()
+    {
+     	builder.BuildWorld();
+    }
+
+	/* FUNCTION FOR REACTIVATING TILES */
+	public void RemoveTiles()
+	{
+		Vector3 playerPos = playerSingleton.transform.position;
+		GameObject[] tiles = GameObject.FindGameObjectsWithTag("Tile");
+
+		foreach (GameObject tile in tiles)
+		{
+			if (Mathf.Abs(Vector3.Distance(tile.transform.position, playerPos)) > Settings.maxDistance) {
+				Destroy(tile);
 			}
 		}
+	}
+
+	public void BuildTiles()
+	{
+		int size =  Settings.maxDistance / (Settings.tileSize * 2);
+
+		Vector3 center = new Vector3((int)playerSingleton.transform.position.x / Settings.tileSize, 0 , (int)playerSingleton.transform.position.z / Settings.tileSize);
+
+		Queue<Vector3> tileQue = new Queue<Vector3>();
+
+		GameObject[] tiles = GameObject.FindGameObjectsWithTag("Tile");
+
+		bool isFound;
+
+		for(int x = (-size + (int)center.x); x <= (size + (int)center.x); x++)
+		{
+			for(int z = (-size + (int)center.z); z <= (size + (int)center.z); z++)
+			{
+				isFound = false;
+
+				Vector3 tilePos = new Vector3(x * Settings.tileSize, 0,z * Settings.tileSize);
+
+				foreach(Vector3 tile in builder.buildQue)
+				{
+					if(tile == tilePos)
+					{
+						isFound = true;
+						break;
+					}
+				}
+
+				if(isFound)
+					continue;
+
+				foreach(GameObject tile in tiles)
+				{
+					if(tile.transform.position ==  tilePos)
+					{
+						isFound = true;
+						break;	
+					}
+				}
+
+				if(!isFound)
+					tileQue.Enqueue(tilePos);
+			}
+		}
+
+		builder.AddToBuildQueue(tileQue);
 	}
 }
