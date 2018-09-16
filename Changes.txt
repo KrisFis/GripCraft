@@ -1,0 +1,12 @@
+v1.0
+Change Log:
+- Uživatelsky přívětivější UI
+- Optimalizovaný kolizní prvek hráče
+- Optimalizovaný skok a běh
+- Omezení počtu snímků / vynucený VSYNC
+
+Známé chyby:
+- Občasné díry v terénu
+- Propad terénem (Jen částečné optimalizované kolize)
+- Při těžení/ničení vygenerovaného terénu v určité chvíli nedogenerování dalších kostek
+- Nemožnost vyskočit, když hráč je příliš blízko kostce a jde směrem k ní
